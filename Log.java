@@ -2,18 +2,18 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Date;
 
 /**
  * Created by xinghe on 2017/4/8.
  */
-public class Log {
+class Log {
 
     private int mainId;
     private BufferedWriter logFile;
     private String logContent;
-    public Log(int mainId) throws IOException {
+    Log(int mainId) throws IOException {
         this.mainId = mainId;
         String logFileName = "/cise/homes/chilee/Desktop/Network/log_peer_" + mainId + ".log";
         logFile = new BufferedWriter(new FileWriter(logFileName));
@@ -25,19 +25,22 @@ public class Log {
         return time.format(new Date());
     }
 
-    synchronized public void cnct(int connectId) throws IOException {
+    synchronized void cnct(int connectId) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] makes a connection to Peer [" + connectId + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void cnted(int connectId) throws IOException {
+    synchronized void cnted(int connectId) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] is connected from Peer [" + connectId + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void changeOfPreNbLog(ArrayList prNbList) throws IOException {
+    synchronized void changeOfPreNbLog(LinkedList prNbList) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] has the preferred neighbors [";
         logFile.write(logContent);
+        System.out.println(logContent);
         for (int i = 0; i < prNbList.size(); i++) {
             if (i == prNbList.size() - 1)
                 logFile.write(prNbList.get(i) + "].\n");
@@ -46,44 +49,52 @@ public class Log {
         }
     }
 
-    synchronized public void changeOfOpUnchokeNbLog(int opUnchokeId) throws IOException {
+    synchronized void changeOfOpUnchokeNbLog(int opUnchokeId) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] has the optimistically neighbor [" + opUnchokeId + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void unchokingLog(int unchokedById) throws IOException {
+    synchronized void unchokingLog(int unchokedById) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] is unchoked by Peer [" + unchokedById + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void chokingLog(int chokedById) throws IOException {
+    synchronized void chokingLog(int chokedById) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] is choked by Peer [" + chokedById + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void haveReceived(int haveById, int index) throws IOException {
+    synchronized void haveReceived(int haveById, int index) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] received the 'have' message from [" + haveById + "] for the piece [" + index + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void interestedReiceived(int receiveById) throws IOException {
+    synchronized void interestedReiceived(int receiveById) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] received the 'interested' message from [" + receiveById + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void notInterestedReceived(int receiveById) throws IOException {
+    synchronized void notInterestedReceived(int receiveById) throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] received the 'not interested' message from [" + receiveById + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void pieceDownloadLog(int peerId, int index) throws IOException {
-        logContent = getTime() + "Peer [" + mainId + "] has downloaded the piece [" + index + "] from [" + peerId + "].\n";
+    synchronized void pieceDownloadLog(int peerId, int index, int pieceNumber) throws IOException {
+        logContent = getTime() + "Peer [" + mainId + "] has downloaded the piece [" + index + "] from [" + peerId + "]. Now the number of pieces it has is [" + pieceNumber + "].\n";
         logFile.write(logContent);
+        System.out.println(logContent);
     }
 
-    synchronized public void completeLog() throws IOException {
+    synchronized void completeLog() throws IOException {
         logContent = getTime() + "Peer [" + mainId + "] has downloaded the complete file.\n";
         logFile.write(logContent);
+        System.out.println(logContent);
         logFile.close();
     }
 }

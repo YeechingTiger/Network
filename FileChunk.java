@@ -2,109 +2,92 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.BitSet;
+import java.util.stream.IntStream;
 
 /**
  * Created by xinghe on 2017/4/8.
  */
 
-public class FileChunk {
+class FileChunk {
 
-    public int peerID;
-    public int chunkSize;
-    public String filename;
-    public int fileSize;
-    public int exist;
-    public Log log;
-    public RandomAccessFile raf;
-    public BitSet bitField;
-    public int[] requestField;
-    public int bLength;
-    public int count = 0;
+    private int chunkSize;
+    private int fileSize;
+    Log log;
+    private RandomAccessFile randomAccessFile;
+    private BitSet bitField;
+    int[] requestField;
+    private int bitSetLength;
+    int count = 0;
 
-    public FileChunk (int peerID, String filename, int exist, int filesize, int chunksize) throws IOException {
-        this.peerID = peerID;
-        this.filename = "/cise/homes/chilee/Desktop/Network/peer_"+ peerID + "/" + filename;;
-        this.exist = exist;
-        this.fileSize = filesize;
-        this.chunkSize = chunksize;
-
+    FileChunk(int peerID, String fileName, int exist, int fileSize, int chunkSize) throws IOException {
+        String fileName1 = "/cise/homes/chilee/Desktop/Network/peer_" + peerID + "/" + fileName;
+        this.fileSize = fileSize;
+        this.chunkSize = chunkSize;
+        bitSetLength = Helper.upperNum(fileSize, chunkSize);
         File place = new File("/cise/homes/chilee/Desktop/Network/peer_"+ peerID +"/");
-        if (! place.exists()) {
-            place.mkdirs();
-        }
+        if (! place.exists()) place.mkdirs();
 
         this.log = new Log(peerID);
-        System.out.println(peerID + "/" + exist);
-        raf = new RandomAccessFile(this.filename, "rw");
-        bLength = Helper.upperNum(filesize, chunksize);
-        bitField = new BitSet(bLength);
-        requestField = new int[bLength];
+        randomAccessFile = new RandomAccessFile(fileName1, "rw");
+        bitField = new BitSet(bitSetLength);
+        requestField = new int[bitSetLength];
 
         int i;
-        if (exist == 1) {
-            bitField.set(0, bLength);
-            System.out.println("bitset set all bits to be true/" + checkBitFd());
+        switch (exist) {
+            case 1:
+                bitField.set(0, bitSetLength);
+                count = bitSetLength;
+                break;
+            default:
+                bitField.set(0, bitSetLength, false);
+                count = 0;
+                break;
         }
         i = 0;
-        while (i < bLength) {
-            requestField[i] = 0;
-            i++;
+        if (i < bitSetLength) {
+            do {
+                requestField[i] = 0;
+                i++;
+            } while (i < bitSetLength);
         }
     }
 
-    public byte[] bitfdToByte() {
+    byte[] bitfdToByte() {
         return bitField.toByteArray();
     }
 
-    public boolean checkBitFd() {
-        for (int i = 0; i < bLength; i++)
-            if (! bitField.get(i))
-                return false;
-        return true;
+    boolean checkBitFd() {
+        return IntStream.range(0, bitSetLength).allMatch(i -> bitField.get(i));
     }
 
-    public int checkBitFdInt() {
-        for (int i = 0; i < bLength; i++)
-            if (! bitField.get(i))
-                return i;
-        return - 1;
-    }
-
-    public void wrtPiece(byte[] content, int index) throws IOException {
-        raf.seek((long) index * chunkSize);
-        raf.write(content);
+    void wrtPiece(byte[] content, int index) throws IOException {
+        randomAccessFile.seek((long) index * chunkSize);
+        randomAccessFile.write(content);
         count++;
-        System.out.println(peerID + " Has written total piece number " + count);
     }
 
 
-    public byte[] getPiece(int index) throws IOException {
-        int pLength;
-        if (index == bLength - 1)
-            pLength = fileSize - (bLength - 1) * chunkSize;
-        else
-            pLength = chunkSize;
-        byte[] buf = new byte[pLength];
-        byte[] piece = Helper.intToByte(index);
-        raf.seek((long) index * chunkSize);
-        raf.read(buf);
-        byte[] temp = new byte[buf.length + piece.length];
-        int i;
-        for (i = 0; i < piece.length; i++)
-            temp[i] = piece[i];
-        int j = 0;
-        for (i = piece.length; i < temp.length; i++)
-            temp[i] = buf[j++];
-        return temp;
+    byte[] getPiece(int index) throws IOException {
+        int trueSize;
+        trueSize = index == bitSetLength - 1 ? fileSize - index * chunkSize : chunkSize;
+        byte[] payload = new byte[trueSize + 4];
+        byte[] chunkNeeded = new byte[trueSize];
+        byte[] indexByte = Helper.intToByte(index);
+        long readPlace = (long) index*chunkSize;
+        randomAccessFile.seek(readPlace);
+        randomAccessFile.read(chunkNeeded);
+        System.arraycopy(indexByte, 0, payload, 0, 4);
+        System.arraycopy(chunkNeeded, 0, payload, 4, payload.length - 4);
+        return payload;
     }
 
 
-    public boolean getBitFd(int i) {
+    boolean getBitFd(int i) {
         return bitField.get(i);
     }
 
-    public void setBitFd(int i, boolean b) {
-        bitField.set(i, b);
+    void setBitFd(int i) {
+        bitField.set(i, true);
     }
 
 }
